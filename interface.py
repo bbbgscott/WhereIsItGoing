@@ -6,7 +6,7 @@ from Tkinter import *
 import ttk
 import TkTreectrl as treectrl
 import geo_helper
-import sqlite_helper
+import sqlite_helper as sql
 
 
 def vp_start_gui():
@@ -47,6 +47,10 @@ def init():
 
 def TODO():
         print ('TODO')
+
+
+def select_cmd(selected):
+        pass
 
 
 class TCPSuperSpy:
@@ -149,6 +153,10 @@ class TCPSuperSpy:
         self.mlb.configure(selectbackground="#c4c4c4")
         #self.Scrolledlistbox1.configure(selectbackground="#c4c4c4")
         self.mlb.config(columns=('Local IP', 'Local Port', 'Remote IP', 'Remote Port', 'State'))
+        self.mlb.configure(selectcmd=select_cmd, selectmode='extended')
+        table = sql.read_table()
+        for row in table:
+            self.mlb.insert('end', *map(unicode, row[1:]))
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
