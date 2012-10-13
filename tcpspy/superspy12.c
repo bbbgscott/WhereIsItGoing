@@ -118,4 +118,5 @@ void print_time()
 
 //check.sourceforge.net c-unit tester
 
-//
+//Store last entry in /proc/net/tcp as a variable.  Check that against the
+//file to avoid redundancy.
