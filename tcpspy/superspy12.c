@@ -44,7 +44,7 @@ int main (int argc, char *argv[])
 	
 	if (fp == NULL) 
 	{
-		fp = fopen ("tcpinput", "r");
+		fp = fopen ("/proc/net/tcp", "r");
 		if (fp == NULL) 
 		{
 			printf("/proc/net/tcp: %s", strerror (errno));
@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
 		printf("/proc/net/tcp: missing header\n");
 	}
 
-	while (x<400)
+	while (x<10)
 	{
 		rewind (fp);
 		printf("time stamp# %d: ", x);
@@ -110,9 +110,12 @@ void print_time()
 	printf("%s%ld\n",t, tv.tv_usec);
 	//fprintf(out, "%s%ld\n ",t, tv.tv_usec);
 }
-
-//work on integration
-//to call brians program and get it to respond
+//work on integration - check depend file in repo
+//fix time issue
+//no redundant connections
+// dont forget the poster-- 
 //put a shell around tcpspy that invokes superspy or tcpspy
 
 //check.sourceforge.net c-unit tester
+
+//
