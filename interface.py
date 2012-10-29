@@ -5,7 +5,7 @@ import sys
 from Tkinter import *
 import ttk
 import TkTreectrl as treectrl
-import geo_helper
+import geo_helper as geo
 import sqlite_helper as sql
 
 
@@ -49,11 +49,20 @@ def TODO():
         print ('TODO')
 
 
-def select_cmd(selected):
-        pass
-
-
 class TCPSuperSpy:
+    def select_cmd(self, y):
+        self.Geo_Info['state'] = 'normal'
+        self.Geo_Info.delete('1.0', 'end')
+        tup = self.mlb.get(y[0])
+        ip = geo.find_ip(tup[0][2])
+        if ip is None:
+            self.Geo_Info.insert('end', 'Could not find info for ip address: ' + tup[0][2])
+        else:
+            self.Geo_Info.insert('end', 'Info for address: ' + tup[0][2] + '\n')
+            self.Geo_Info.insert('end', 'Country: ' + str(ip['country_name']) + '\n')
+            self.Geo_Info.insert('end', 'City: ' + ip['city'] + '\n')
+        self.Geo_Info['state'] = 'disabled'
+
     def __init__(self, master=None):
         # Set background of toplevel window to match
         # current style
@@ -147,16 +156,25 @@ class TCPSuperSpy:
                 label="Paste")
 
         self.mlb = treectrl.MultiListbox(master)
-        #self.Scrolledlistbox1 = ScrolledListBox(master)
         self.mlb.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.5)
-        #self.Scrolledlistbox1.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.5)
         self.mlb.configure(selectbackground="#c4c4c4")
-        #self.Scrolledlistbox1.configure(selectbackground="#c4c4c4")
         self.mlb.config(columns=('Local IP', 'Local Port', 'Remote IP', 'Remote Port', 'State'))
-        self.mlb.configure(selectcmd=select_cmd, selectmode='extended')
+        self.mlb.configure(selectcmd=self.select_cmd, selectmode='single')
         table = sql.read_table()
         for row in table:
             self.mlb.insert('end', *map(unicode, row[1:]))
+
+        self.Outline = Frame(master)
+        self.Outline.place(relx=0.51, rely=0.02, relheight=0.96, relwidth=0.48)
+        self.Outline.configure(relief=GROOVE)
+        self.Outline.configure(borderwidth='2')
+        self.Outline.configure(relief='groove')
+
+        self.Geo_Info = Text(self.Outline)
+        self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Geo_Info.configure(background="#cccccc")
+        self.Geo_Info.configure(wrap='none')
+        self.Geo_Info.configure(state='disabled')
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
