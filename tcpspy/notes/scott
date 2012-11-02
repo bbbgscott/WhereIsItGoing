@@ -1,0 +1,16 @@
+Hey, Scott.  This is where your stuff goes.
+
+---git-hub------
+git add filename.c (or git add *)
+git commit -m "commit message"
+git pull
+git  push origin master
+
+
+-----initiate the interface-----
+python
+import sqlite_helper as db
+db.create_tcp_table()
+
+
+---done----

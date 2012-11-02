@@ -1,0 +1,29 @@
+README for tcpspy 1.7
+---------------------
+
+1. Introduction
+
+tcpspy is an administrators' tool that logs selecting incoming and outgoing
+TCP/IP connections. Please see the tcpspy(8) manual page for an extended
+description; `man 8 tcpspy' after installation, or `man ./tcpspy.8' now.
+
+2. Compilation and Installation Instructions
+
+`make' to compile tcpspy, then `make install' to install it (to /usr/local
+by default, change the Makefile if you need it installed elsewhere). Provided
+you have the correct tools, `make doc' will convert the manual page to
+HTML, PostScript and PDF formats: groff and ghostscript (ps2pdf).
+
+3. Running tcpspy
+
+Read the manual page. If you're not patient enough for that, type `tcpspy'
+and see what happens.
+
+4. Copyright, Licence, Warranty
+
+See the file LICENCE for details.
+
+
+Tim J. Robbins <tim@robbins.dropbear.id.au>
+
+$Id: README,v 2.7 2001/06/01 12:20:59 tim Stab $
