@@ -1,6 +1,6 @@
 import pygeoip
 # Download link: http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-gi = pygeoip.GeoIP("db/GeoLiteCity.dat")
+gi = pygeoip.GeoIP("../db/GeoLiteCity.dat")
 #print gi.record_by_name("google.com")
 #print gi.record_by_addr("127.0.0.1")
 

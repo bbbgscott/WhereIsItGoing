@@ -2,11 +2,12 @@
 # -*- python -*-
 
 import sys
-from Tkinter import *
 import ttk
-import TkTreectrl as treectrl
+import threading
+from Tkinter import *
 import geo_helper as geo
 import sqlite_helper as sql
+import TkTreectrl as treectrl
 
 
 def vp_start_gui():
@@ -14,7 +15,7 @@ def vp_start_gui():
     global val, w, root
     root = Tk()
     root.title('TCPSuperSpy')
-    root.geometry('800x600+339+204')
+    root.geometry('1200x600+339+204')
     w = TCPSuperSpy(root)
     init()
     root.mainloop()
@@ -29,7 +30,7 @@ def create_TCPSuperSpy(root):
         return
     w = Toplevel(root)
     w.title('TCPSuperSpy')
-    w.geometry('800x600+339+204')
+    w.geometry('1200x600+339+204')
     w_win = TCPSuperSpy(w)
     init()
     return w_win
@@ -39,6 +40,7 @@ def destroy_TCPSuperSpy():
     global w
     w.destroy()
     w = None
+
 
 
 def init():
@@ -160,9 +162,12 @@ class TCPSuperSpy:
         self.mlb.configure(selectbackground="#c4c4c4")
         self.mlb.config(columns=('Local IP', 'Local Port', 'Remote IP', 'Remote Port', 'State'))
         self.mlb.configure(selectcmd=self.select_cmd, selectmode='single')
+        self.update_table()
+        """
         table = sql.read_table()
         for row in table:
             self.mlb.insert('end', *map(unicode, row[1:]))
+        """
 
         self.Outline = Frame(master)
         self.Outline.place(relx=0.51, rely=0.02, relheight=0.96, relwidth=0.48)
@@ -175,6 +180,12 @@ class TCPSuperSpy:
         self.Geo_Info.configure(background="#cccccc")
         self.Geo_Info.configure(wrap='none')
         self.Geo_Info.configure(state='disabled')
+
+    def update_table(self):
+        threading.Timer(5.0, self.update_table).start()
+        table = sql.read_table()
+        for row in table:
+            self.mlb.insert('end', *map(unicode, row[1:]))
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
