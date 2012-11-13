@@ -15,7 +15,6 @@ def create_tcp_table():  # Should only need to be run once
                                     rem_port INTEGER,
                                     conn_stat BOOLEAN,
                                     exec_path VARCHAR(30))''')
-#                                    state VARCHAR(2))''')
     # Save changes (commit)
     conn.commit()
 
@@ -24,7 +23,7 @@ def create_tcp_table():  # Should only need to be run once
 
 
 def insert_tcp_row(stamp, loc_ip, loc_port, rem_ip, rem_port, conn, ex_path):
-    conn = sqlite3.connect('db/super_spy.db')
+    conn = sqlite3.connect('../db/super_spy.db')
     c = conn.cursor()
     local_ip = geo.convert_hex_ip(loc_ip)
     remote_ip = geo.convert_hex_ip(rem_ip)
@@ -52,6 +51,15 @@ def drop_table():
     conn = sqlite3.connect('../db/super_spy.db')
     c = conn.cursor()
     c.execute("DROP TABLE tcp")
+    c.close()
+
+
+def get_distinct_ips():
+    query = "SELECT DISTINCT FROM tcp"
+    conn = sqlite3.connect('../db/super_spy.db')
+    c = conn.cursor()
+    c.execute(query)
+    c.close()
 
 '''
 46: 010310AC:9C4C 030310AC:1770 01 00000150:00000000 01:00000019 00000000 1000 0 54165785 4 cd1e6040 25 4 27 3 -1

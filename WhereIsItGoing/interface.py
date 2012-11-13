@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- python -*-
 
-import sys
+import os
 import ttk
 import threading
 from Tkinter import *
@@ -12,6 +12,8 @@ import TkTreectrl as treectrl
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
+    if not os.path.exists("../db/super_spy.db"):
+        sql.create_tcp_table()
     global val, w, root
     root = Tk()
     root.title('TCPSuperSpy')
@@ -40,7 +42,6 @@ def destroy_TCPSuperSpy():
     global w
     w.destroy()
     w = None
-
 
 
 def init():
@@ -158,9 +159,15 @@ class TCPSuperSpy:
                 label="Paste")
 
         self.mlb = treectrl.MultiListbox(master)
-        self.mlb.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.5)
+        self.mlb.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.55)
         self.mlb.configure(selectbackground="#c4c4c4")
-        self.mlb.config(columns=('Local IP', 'Local Port', 'Remote IP', 'Remote Port', 'State'))
+        self.mlb.config(columns=('Unix Time',
+                                'Local IP',
+                                'Local Port',
+                                'Remote IP',
+                                'Remote Port',
+                                'Connection Status',
+                                'Executable'))
         self.mlb.configure(selectcmd=self.select_cmd, selectmode='single')
         self.update_table()
         """
@@ -169,17 +176,29 @@ class TCPSuperSpy:
             self.mlb.insert('end', *map(unicode, row[1:]))
         """
 
-        self.Outline = Frame(master)
-        self.Outline.place(relx=0.51, rely=0.02, relheight=0.96, relwidth=0.48)
+        """self.Outline = Frame(master)
+        self.Outline.place(relx=0.56, rely=0.02, relheight=0.44, relwidth=0.42)
         self.Outline.configure(relief=GROOVE)
         self.Outline.configure(borderwidth='2')
-        self.Outline.configure(relief='groove')
+        self.Outline.configure(relief='groove')"""
+
+        self.Outline = ttk.Notebook(master)
+        self.Outline.place(relx=0.56, rely=0.02, relheight=0.96, relwidth=0.42)
 
         self.Geo_Info = Text(self.Outline)
         self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
         self.Geo_Info.configure(background="#cccccc")
         self.Geo_Info.configure(wrap='none')
         self.Geo_Info.configure(state='disabled')
+
+        self.Report_10 = Text(self.Outline)
+        self.Report_10.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_10.configure(background='#10ab8c')
+        self.Report_10.configure(wrap='none')
+        self.Report_10.configure(state='disabled')
+
+        self.Outline.add(self.Geo_Info, text='Geo Info')
+        self.Outline.add(self.Report_10, text='10 Min')
 
     def update_table(self):
         threading.Timer(5.0, self.update_table).start()
