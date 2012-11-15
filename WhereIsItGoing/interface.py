@@ -3,6 +3,7 @@
 
 import os
 import ttk
+import time
 import threading
 from Tkinter import *
 import geo_helper as geo
@@ -23,6 +24,7 @@ def vp_start_gui():
     root.mainloop()
 
 w = None
+t = None
 
 
 def create_TCPSuperSpy(root):
@@ -40,6 +42,7 @@ def create_TCPSuperSpy(root):
 
 def destroy_TCPSuperSpy():
     global w
+    kill_timer()
     w.destroy()
     w = None
 
@@ -121,7 +124,8 @@ class TCPSuperSpy:
                 activebackground="#d9d9d9",
                 activeforeground="#000000",
                 background="#d9d9d9",
-                command=root.quit,
+                command=root.destroy,
+                #command=root.quit,
                 font="font12",
                 foreground="#000000",
                 label="Exit")
@@ -197,14 +201,58 @@ class TCPSuperSpy:
         self.Report_10.configure(wrap='none')
         self.Report_10.configure(state='disabled')
 
+        self.Report_hour = Text(self.Outline)
+        self.Report_hour.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_hour.configure(background='#10ab8c')
+        self.Report_hour.configure(wrap='none')
+        self.Report_hour.configure(state='disabled')
+
+        self.Report_day = Text(self.Outline)
+        self.Report_day.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_day.configure(background='#10ab8c')
+        self.Report_day.configure(wrap='none')
+        self.Report_day.configure(state='disabled')
+
+        # Pack the tabs
         self.Outline.add(self.Geo_Info, text='Geo Info')
         self.Outline.add(self.Report_10, text='10 Min')
+        self.Outline.add(self.Report_hour, text='hour')
+        self.Outline.add(self.Report_day, text='day')
+
+        self.Outline.bind('<1>', self.on_click)
 
     def update_table(self):
-        threading.Timer(5.0, self.update_table).start()
+        global t
+        if t is None:
+            t = threading.Timer(5.0, self.update_table).start()
         table = sql.read_table()
         for row in table:
             self.mlb.insert('end', *map(unicode, row[1:]))
+
+    def kill_timer(self):
+        global t
+        t.cancel()
+
+    def on_click(self, event):
+        if event.widget.identify(event.x, event.y) == 'label':
+            index = event.widget.index('@%d, %d' % (event.x, event.y))
+            print event.widget.index(index)
+            tabby = event.widget.tab(index)['text']
+            if tabby == '10 Min':
+                self.report_10_min()
+            elif tabby == 'hour':
+                self.report_hour()
+            elif tabby == 'day':
+                self.report_day()
+
+    def report_10_min(self):
+        pass
+
+    def report_hour(self):
+        pass
+
+    def report_day(self):
+        pass
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
