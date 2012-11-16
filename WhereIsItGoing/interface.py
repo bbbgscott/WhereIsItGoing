@@ -1,25 +1,30 @@
 #! /usr/bin/env python
 # -*- python -*-
 
-import sys
-from Tkinter import *
+import os
 import ttk
-import TkTreectrl as treectrl
-import geo_helper
+import time
+import threading
+from Tkinter import *
+import geo_helper as geo
 import sqlite_helper as sql
+import TkTreectrl as treectrl
 
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
+    if not os.path.exists("../db/super_spy.db"):
+        sql.create_tcp_table()
     global val, w, root
     root = Tk()
     root.title('TCPSuperSpy')
-    root.geometry('800x600+339+204')
+    root.geometry('1200x600+339+204')
     w = TCPSuperSpy(root)
     init()
     root.mainloop()
 
 w = None
+t = None
 
 
 def create_TCPSuperSpy(root):
@@ -29,7 +34,7 @@ def create_TCPSuperSpy(root):
         return
     w = Toplevel(root)
     w.title('TCPSuperSpy')
-    w.geometry('800x600+339+204')
+    w.geometry('1200x600+339+204')
     w_win = TCPSuperSpy(w)
     init()
     return w_win
@@ -37,6 +42,7 @@ def create_TCPSuperSpy(root):
 
 def destroy_TCPSuperSpy():
     global w
+    kill_timer()
     w.destroy()
     w = None
 
@@ -49,11 +55,20 @@ def TODO():
         print ('TODO')
 
 
-def select_cmd(selected):
-        pass
-
-
 class TCPSuperSpy:
+    def select_cmd(self, y):
+        self.Geo_Info['state'] = 'normal'
+        self.Geo_Info.delete('1.0', 'end')
+        tup = self.mlb.get(y[0])
+        ip = geo.find_ip(tup[0][2])
+        if ip is None:
+            self.Geo_Info.insert('end', 'Could not find info for ip address: ' + tup[0][2])
+        else:
+            self.Geo_Info.insert('end', 'Info for address: ' + tup[0][2] + '\n')
+            self.Geo_Info.insert('end', 'Country: ' + str(ip['country_name']) + '\n')
+            self.Geo_Info.insert('end', 'City: ' + ip['city'] + '\n')
+        self.Geo_Info['state'] = 'disabled'
+
     def __init__(self, master=None):
         # Set background of toplevel window to match
         # current style
@@ -109,7 +124,8 @@ class TCPSuperSpy:
                 activebackground="#d9d9d9",
                 activeforeground="#000000",
                 background="#d9d9d9",
-                command=root.quit,
+                command=root.destroy,
+                #command=root.quit,
                 font="font12",
                 foreground="#000000",
                 label="Exit")
@@ -147,16 +163,96 @@ class TCPSuperSpy:
                 label="Paste")
 
         self.mlb = treectrl.MultiListbox(master)
-        #self.Scrolledlistbox1 = ScrolledListBox(master)
-        self.mlb.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.5)
-        #self.Scrolledlistbox1.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.5)
+        self.mlb.place(relx=0.0, rely=0.0, relheight=1.0, relwidth=0.55)
         self.mlb.configure(selectbackground="#c4c4c4")
-        #self.Scrolledlistbox1.configure(selectbackground="#c4c4c4")
-        self.mlb.config(columns=('Local IP', 'Local Port', 'Remote IP', 'Remote Port', 'State'))
-        self.mlb.configure(selectcmd=select_cmd, selectmode='extended')
+        self.mlb.config(columns=('Unix Time',
+                                'Local IP',
+                                'Local Port',
+                                'Remote IP',
+                                'Remote Port',
+                                'Connection Status',
+                                'Executable'))
+        self.mlb.configure(selectcmd=self.select_cmd, selectmode='single')
+        self.update_table()
+        """
         table = sql.read_table()
         for row in table:
             self.mlb.insert('end', *map(unicode, row[1:]))
+        """
+
+        """self.Outline = Frame(master)
+        self.Outline.place(relx=0.56, rely=0.02, relheight=0.44, relwidth=0.42)
+        self.Outline.configure(relief=GROOVE)
+        self.Outline.configure(borderwidth='2')
+        self.Outline.configure(relief='groove')"""
+
+        self.Outline = ttk.Notebook(master)
+        self.Outline.place(relx=0.56, rely=0.02, relheight=0.96, relwidth=0.42)
+
+        self.Geo_Info = Text(self.Outline)
+        self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Geo_Info.configure(background="#cccccc")
+        self.Geo_Info.configure(wrap='none')
+        self.Geo_Info.configure(state='disabled')
+
+        self.Report_10 = Text(self.Outline)
+        self.Report_10.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_10.configure(background='#10ab8c')
+        self.Report_10.configure(wrap='none')
+        self.Report_10.configure(state='disabled')
+
+        self.Report_hour = Text(self.Outline)
+        self.Report_hour.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_hour.configure(background='#10ab8c')
+        self.Report_hour.configure(wrap='none')
+        self.Report_hour.configure(state='disabled')
+
+        self.Report_day = Text(self.Outline)
+        self.Report_day.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_day.configure(background='#10ab8c')
+        self.Report_day.configure(wrap='none')
+        self.Report_day.configure(state='disabled')
+
+        # Pack the tabs
+        self.Outline.add(self.Geo_Info, text='Geo Info')
+        self.Outline.add(self.Report_10, text='10 Min')
+        self.Outline.add(self.Report_hour, text='hour')
+        self.Outline.add(self.Report_day, text='day')
+
+        self.Outline.bind('<1>', self.on_click)
+
+    def update_table(self):
+        global t
+        if t is None:
+            t = threading.Timer(5.0, self.update_table).start()
+        table = sql.read_table()
+        for row in table:
+            self.mlb.insert('end', *map(unicode, row[1:]))
+
+    def kill_timer(self):
+        global t
+        t.cancel()
+
+    def on_click(self, event):
+        if event.widget.identify(event.x, event.y) == 'label':
+            index = event.widget.index('@%d, %d' % (event.x, event.y))
+            print event.widget.index(index)
+            tabby = event.widget.tab(index)['text']
+            if tabby == '10 Min':
+                self.report_10_min()
+            elif tabby == 'hour':
+                self.report_hour()
+            elif tabby == 'day':
+                self.report_day()
+
+    def report_10_min(self):
+        pass
+
+    def report_hour(self):
+        pass
+
+    def report_day(self):
+        pass
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
