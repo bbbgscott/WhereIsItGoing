@@ -3,7 +3,6 @@
 
 import os
 import ttk
-import time
 import threading
 from Tkinter import *
 import geo_helper as geo
@@ -25,6 +24,7 @@ def vp_start_gui():
 
 w = None
 t = None
+last = 0
 
 
 def create_TCPSuperSpy(root):
@@ -60,11 +60,11 @@ class TCPSuperSpy:
         self.Geo_Info['state'] = 'normal'
         self.Geo_Info.delete('1.0', 'end')
         tup = self.mlb.get(y[0])
-        ip = geo.find_ip(tup[0][2])
+        ip = geo.find_ip(tup[0][3])
         if ip is None:
-            self.Geo_Info.insert('end', 'Could not find info for ip address: ' + tup[0][2])
+            self.Geo_Info.insert('end', 'Could not find info for ip address: ' + tup[0][3])
         else:
-            self.Geo_Info.insert('end', 'Info for address: ' + tup[0][2] + '\n')
+            self.Geo_Info.insert('end', 'Info for address: ' + tup[0][3] + '\n')
             self.Geo_Info.insert('end', 'Country: ' + str(ip['country_name']) + '\n')
             self.Geo_Info.insert('end', 'City: ' + ip['city'] + '\n')
         self.Geo_Info['state'] = 'disabled'
@@ -189,11 +189,19 @@ class TCPSuperSpy:
         self.Outline = ttk.Notebook(master)
         self.Outline.place(relx=0.56, rely=0.02, relheight=0.96, relwidth=0.42)
 
-        self.Geo_Info = Text(self.Outline)
-        self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Geo = Frame(self.Outline)
+        self.Geo.place(relx=0, rely=0, relheight=1, relwidth=1)
+        self.Geo.configure(background="#10ab8c")
+
+        self.Geo_Info = Text(self.Geo)
+        self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.47, relwidth=0.95)
         self.Geo_Info.configure(background="#cccccc")
         self.Geo_Info.configure(wrap='none')
         self.Geo_Info.configure(state='disabled')
+
+        self.Geo_image = Canvas(self.Geo)
+        self.Geo_image.place(relx=0.03, rely=0.02, relheight=0.47, relwidth=0.95)
+        self.Geo_image.configure(background="#ffffff")
 
         self.Report_10 = Text(self.Outline)
         self.Report_10.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
@@ -214,7 +222,7 @@ class TCPSuperSpy:
         self.Report_day.configure(state='disabled')
 
         # Pack the tabs
-        self.Outline.add(self.Geo_Info, text='Geo Info')
+        self.Outline.add(self.Geo, text='Geo Info')
         self.Outline.add(self.Report_10, text='10 Min')
         self.Outline.add(self.Report_hour, text='hour')
         self.Outline.add(self.Report_day, text='day')
@@ -223,15 +231,19 @@ class TCPSuperSpy:
 
     def update_table(self):
         global t
-        if t is None:
+        global last
+        rowid = sql.get_latest_id()
+        if t == None:
             t = threading.Timer(5.0, self.update_table).start()
-        table = sql.read_table()
-        for row in table:
-            self.mlb.insert('end', *map(unicode, row[1:]))
+        if rowid > last:
+            last = rowid
+            table = sql.read_table()
+            for row in table:
+                self.mlb.insert('end', *map(unicode, row[1:]))
 
     def kill_timer(self):
         global t
-        t.cancel()
+        t.exit()
 
     def on_click(self, event):
         if event.widget.identify(event.x, event.y) == 'label':
@@ -239,20 +251,11 @@ class TCPSuperSpy:
             print event.widget.index(index)
             tabby = event.widget.tab(index)['text']
             if tabby == '10 Min':
-                self.report_10_min()
+                table = sql.report_10_min()
             elif tabby == 'hour':
-                self.report_hour()
+                table = sql.report_hour()
             elif tabby == 'day':
-                self.report_day()
-
-    def report_10_min(self):
-        pass
-
-    def report_hour(self):
-        pass
-
-    def report_day(self):
-        pass
+                table = sql.report_day()
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.
