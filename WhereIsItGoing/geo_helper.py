@@ -1,4 +1,5 @@
 import pygeoip
+import datetime
 # Download link: http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
 gi = pygeoip.GeoIP("../db/GeoLiteCity.dat")
 #print gi.record_by_name("google.com")
@@ -20,6 +21,13 @@ def find_ip(ip):
 
     fin = gi.record_by_addr(ip)
     return fin
+
+
+def alter_row(row):
+    loc = find_ip(row[4])
+    date = datetime.datetime.fromtimestamp(row[1]).strftime('%Y-%m-%d %H:%M:%S')
+    arow = date, row[2], loc['country_name'], loc['city']
+    return arow
 
 # print convert_ip("030310ac")
 # should return 172.16.3.3

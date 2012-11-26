@@ -4,6 +4,8 @@
 import os
 import ttk
 import threading
+import cairoplot as cairo
+from pylab import *
 from Tkinter import *
 import geo_helper as geo
 import sqlite_helper as sql
@@ -16,7 +18,7 @@ def vp_start_gui():
         sql.create_tcp_table()
     global val, w, root
     root = Tk()
-    root.title('TCPSuperSpy')
+    root.title('WhereIsItGoing')
     root.geometry('1200x600+339+204')
     w = TCPSuperSpy(root)
     init()
@@ -68,6 +70,26 @@ class TCPSuperSpy:
             self.Geo_Info.insert('end', 'Country: ' + str(ip['country_name']) + '\n')
             self.Geo_Info.insert('end', 'City: ' + ip['city'] + '\n')
         self.Geo_Info['state'] = 'disabled'
+
+    def gen_graph(self):
+        figure(1, figsize=(6, 6))
+        axes([0.1, 0.1, 0.8, 0.8])
+
+        mycolors = ['red', 'blue', 'green', 'brown']
+        mylabels = ['Red', 'Blue', 'Green', 'Brown']
+        fracs = [5, 3, 2, 1]
+        pie(fracs, labels=mylabels, colors=mycolors)
+
+        show()
+
+    def write_report(self, table):
+        self.Report_general['state'] = 'normal'
+        self.Report_general.delete('1.0', 'end')
+        for row in table:
+            #self.Report_general.insert('end', row)
+            self.Report_general.insert('end', str(row[0]) + ' ' + str(row[1]) + ' ' + str(row[2]) + ' ' + str(row[3]) + '\n')
+
+        self.Report_general['state'] = 'disabled'
 
     def __init__(self, master=None):
         # Set background of toplevel window to match
@@ -172,6 +194,7 @@ class TCPSuperSpy:
                                 'Remote Port',
                                 'Connection Status',
                                 'Executable'))
+        # Timestamp, Local IP, Local Port, Remote IP, Connection Status
         self.mlb.configure(selectcmd=self.select_cmd, selectmode='single')
         self.update_table()
         """
@@ -189,17 +212,13 @@ class TCPSuperSpy:
         self.Outline = ttk.Notebook(master)
         self.Outline.place(relx=0.56, rely=0.02, relheight=0.96, relwidth=0.42)
 
-        self.Geo = Frame(self.Outline)
-        self.Geo.place(relx=0, rely=0, relheight=1, relwidth=1)
-        self.Geo.configure(background="#10ab8c")
-
-        self.Geo_Info = Text(self.Geo)
+        self.Geo_Info = Text(self.Outline)
         self.Geo_Info.place(relx=0.03, rely=0.02, relheight=0.47, relwidth=0.95)
         self.Geo_Info.configure(background="#cccccc")
         self.Geo_Info.configure(wrap='none')
         self.Geo_Info.configure(state='disabled')
 
-        self.Geo_image = Canvas(self.Geo)
+        self.Geo_image = Canvas(self.Outline)
         self.Geo_image.place(relx=0.03, rely=0.02, relheight=0.47, relwidth=0.95)
         self.Geo_image.configure(background="#ffffff")
 
@@ -221,11 +240,19 @@ class TCPSuperSpy:
         self.Report_day.configure(wrap='none')
         self.Report_day.configure(state='disabled')
 
+        self.Report_general = Text(self.Outline)
+        self.Report_general.place(relx=0.03, rely=0.02, relheight=0.97, relwidth=0.95)
+        self.Report_general.configure(background='#cccccc')
+        self.Report_general.configure(wrap='none')
+        self.Report_general.configure(state='disabled')
+
         # Pack the tabs
-        self.Outline.add(self.Geo, text='Geo Info')
+        self.Outline.add(self.Geo_Info, text='Geo Info')
+        self.Outline.add(self.Geo_image, text='Pretty Graphs')
         self.Outline.add(self.Report_10, text='10 Min')
         self.Outline.add(self.Report_hour, text='hour')
         self.Outline.add(self.Report_day, text='day')
+        self.Outline.add(self.Report_general, text='General Report')
 
         self.Outline.bind('<1>', self.on_click)
 
@@ -248,7 +275,7 @@ class TCPSuperSpy:
     def on_click(self, event):
         if event.widget.identify(event.x, event.y) == 'label':
             index = event.widget.index('@%d, %d' % (event.x, event.y))
-            print event.widget.index(index)
+            #print event.widget.index(index)
             tabby = event.widget.tab(index)['text']
             if tabby == '10 Min':
                 table = sql.report_10_min()
@@ -256,6 +283,11 @@ class TCPSuperSpy:
                 table = sql.report_hour()
             elif tabby == 'day':
                 table = sql.report_day()
+            elif tabby == 'Pretty Graphs':
+                self.gen_graph()
+            elif tabby == 'General Report':
+                table = sql.general_report()
+                self.write_report(table)
 
 
 # The following code is added to facilitate the Scrolled widgets you specified.

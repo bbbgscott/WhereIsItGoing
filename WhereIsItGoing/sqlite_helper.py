@@ -83,11 +83,10 @@ def report_10_min():
 
 
 def report_hour():
-    t = int(time.time())
-    query = "SELECT * FROM tcp WHERE(" + t + " - unix_time < 3600)"
+    t = int(time.time()) - 3600
     conn = sqlite3.connect('../db/super_spy.db')
     c = conn.cursor()
-    c.execute(query)
+    c.execute("SELECT * FROM tcp WHERE unix_time > " + t)
     rows = c.fetchall()
     c.close()
     return rows
@@ -95,13 +94,26 @@ def report_hour():
 
 def report_day():
     t = int(time.time())
-    query = "SELECT * FROM tcp WHERE(" + t + " - unix_time < 86400)"
+    query = "SELECT * FROM tcp WHERE(" + t + " - unix_time < " + 86400 + ")"
     conn = sqlite3.connect('../db/super_spy.db')
     c = conn.cursor()
     c.execute(query)
     rows = c.fetchall()
     c.close()
     return rows
+
+
+def general_report():
+    endrow = []
+    conn = sqlite3.connect('../db/super_spy.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM tcp")
+    rows = c.fetchall()
+    for row in rows:
+        arow = geo.alter_row(row)
+        endrow.append(arow)
+    c.close()
+    return endrow
 
 '''
 46: 010310AC:9C4C 030310AC:1770 01 00000150:00000000 01:00000019 00000000 1000 0 54165785 4 cd1e6040 25 4 27 3 -1
