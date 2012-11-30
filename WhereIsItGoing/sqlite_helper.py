@@ -115,6 +115,27 @@ def general_report():
     c.close()
     return endrow
 
+
+def get_countries():
+    endrow = []
+    dict_ = {}
+    conn = sqlite3.connect('../db/super_spy.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM tcp")
+    rows = c.fetchall()
+    c.close()
+    for row in rows:
+        arow = geo.alter_row(row)
+        endrow.append(arow)
+
+    for row in endrow:
+        if row[2] not in dict_:
+            dict_[row[2]] = 1
+        else:
+            dict_[row[2]] = dict_[row[2]] + 1
+    return dict_
+
+
 '''
 46: 010310AC:9C4C 030310AC:1770 01 00000150:00000000 01:00000019 00000000 1000 0 54165785 4 cd1e6040 25 4 27 3 -1
 '''

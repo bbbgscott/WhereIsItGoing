@@ -74,10 +74,17 @@ class TCPSuperSpy:
     def gen_graph(self):
         figure(1, figsize=(6, 6))
         axes([0.1, 0.1, 0.8, 0.8])
+        mylabels = []
+        fracs = []
+        dict_ = {}
 
-        mycolors = ['red', 'blue', 'green', 'brown']
-        mylabels = ['Red', 'Blue', 'Green', 'Brown']
-        fracs = [5, 3, 2, 1]
+        dict_ = sql.get_countries()
+        for value in dict_.values():
+            fracs.append(value)
+        for key in dict_.keys():
+            mylabels.append(key)
+
+        mycolors = ['red', 'blue', 'green', 'brown', 'cyan', 'black', 'magenta']
         pie(fracs, labels=mylabels, colors=mycolors)
 
         show()
