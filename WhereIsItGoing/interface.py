@@ -4,7 +4,6 @@
 import os
 import ttk
 import threading
-import cairoplot as cairo
 from pylab import *
 from Tkinter import *
 import geo_helper as geo
@@ -97,6 +96,9 @@ class TCPSuperSpy:
             self.Report_general.insert('end', str(row[0]) + ' ' + str(row[1]) + ' ' + str(row[2]) + ' ' + str(row[3]) + '\n')
 
         self.Report_general['state'] = 'disabled'
+
+    def write_10_min(self, table):
+        pass
 
     def __init__(self, master=None):
         # Set background of toplevel window to match
@@ -286,6 +288,7 @@ class TCPSuperSpy:
             tabby = event.widget.tab(index)['text']
             if tabby == '10 Min':
                 table = sql.report_10_min()
+                self.write_10_min(table)
             elif tabby == 'hour':
                 table = sql.report_hour()
             elif tabby == 'day':

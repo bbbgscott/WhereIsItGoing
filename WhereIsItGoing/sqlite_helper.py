@@ -121,7 +121,7 @@ def get_countries():
     dict_ = {}
     conn = sqlite3.connect('../db/super_spy.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM tcp")
+    c.execute("SELECT * FROM tcp WHERE conn_stat = 'connect'")
     rows = c.fetchall()
     c.close()
     for row in rows:
